@@ -3,6 +3,7 @@ package com.mogun.weatherapp
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -15,11 +16,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
 import com.mogun.weatherapp.databinding.ActivityMainBinding
+import com.mogun.weatherapp.databinding.ItemForecastBinding
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -86,6 +89,22 @@ class MainActivity : AppCompatActivity() {
             return
         }
         fusedLocationClient.lastLocation.addOnSuccessListener {
+            Thread {
+                try {
+                    val addressList = Geocoder(this, Locale.KOREA).getFromLocation(
+                        it.latitude,
+                        it.longitude,
+                        1,
+                    )
+
+                    runOnUiThread {
+                        binding.locationTextView.text = addressList?.get(0)?.thoroughfare.orEmpty()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }.start()
+
             val retrofit = Retrofit.Builder()
                 .baseUrl("http://apis.data.go.kr/")
                 .addConverterFactory(GsonConverterFactory.create())
@@ -98,7 +117,7 @@ class MainActivity : AppCompatActivity() {
             val point = converter.convert(lat = it.latitude, lon = it.longitude)
 
             service.getVilageForecast(
-                serviceKey = getString(R.string.server_key),
+                serviceKey = getString(R.string.service_key),
                 baseDate = baseDateTime.baseDate,
                 baseTime = baseDateTime.baseTime,
                 nx = point.nx,
@@ -127,6 +146,35 @@ class MainActivity : AppCompatActivity() {
                                 Category.TMP -> temperature = forecast.forecastValue.toDouble()
                                 else -> {}
                             }
+                        }
+                    }
+
+                    val list = forecastDateTimeMap.values.toMutableList()
+                    list.sortWith { f1, f2 ->
+                        val f1DateTime = "${f1.forecastDate}${f1.forecastTime}"
+                        val f2DateTime = "${f2.forecastDate}${f2.forecastTime}"
+
+                        return@sortWith f1DateTime.compareTo(f2DateTime)
+                    }
+
+                    val currentForecast = list.first()
+                    binding.temperatureTextView.text = getString(R.string.temperature_text, currentForecast.temperature)
+                    binding.skyTextView.text = currentForecast.weather
+                    binding.precipitationTextView.text = getString(R.string.precipitation_text, currentForecast.precipitation)
+
+                    binding.childForecastLayout.apply {
+                        list.forEachIndexed { index, forecast ->
+                            if (index == 0) {
+                                return@forEachIndexed
+                            }
+
+                            val itemView = ItemForecastBinding.inflate(layoutInflater)
+
+                            itemView.timeTextView.text = forecast.forecastTime
+                            itemView.weatherTextView.text = forecast.weather
+                            itemView.temperatureTextView.text = getString(R.string.temperature_text, forecast.temperature)
+
+                            addView(itemView.root)
                         }
                     }
 
