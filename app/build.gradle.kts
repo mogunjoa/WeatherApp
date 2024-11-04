@@ -55,6 +55,13 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.material)
 
+    // retrofit
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+
+    // 위치 권한
+    implementation(libs.play.services.location)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
