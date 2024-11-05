@@ -17,11 +17,6 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.LocationServices
 import com.mogun.weatherapp.databinding.ActivityMainBinding
 import com.mogun.weatherapp.databinding.ItemForecastBinding
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {

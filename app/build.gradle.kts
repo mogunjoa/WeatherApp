@@ -61,6 +61,7 @@ dependencies {
 
     // 위치 권한
     implementation(libs.play.services.location)
+    implementation(libs.androidx.activity)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
